@@ -1,5 +1,6 @@
 import time
 import json
+import os
 from src.fetcher import fetch_page, parse_items
 from src.notifier import notify_price_change
 from config.settings import BASE_URL, TOTAL_PAGES, CHECK_INTERVAL
@@ -17,10 +18,15 @@ def scrape_items(base_url, total_pages):
     return all_items
 
 def monitor_prices():
-    try:
+    # Check if the old_prices.json file exists and is not empty
+    if os.path.exists('data/old_prices.json') and os.path.getsize('data/old_prices.json') > 0:
         with open('data/old_prices.json', 'r') as f:
-            old_prices = json.load(f)
-    except FileNotFoundError:
+            try:
+                old_prices = json.load(f)
+            except json.JSONDecodeError:
+                print("Error: old_prices.json is not a valid JSON file. Recreating it.")
+                old_prices = scrape_items(BASE_URL, TOTAL_PAGES)
+    else:
         old_prices = scrape_items(BASE_URL, TOTAL_PAGES)
     
     while True:

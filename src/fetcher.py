@@ -13,7 +13,7 @@ def fetch_page(url):
 def parse_items(page_content):
     soup = BeautifulSoup(page_content, 'html.parser')
     item_elements = soup.find_all('a', href=lambda x: x and '/products/' in x)
-    item_price_elements = soup.find_all('span', class_='money')
+    item_price_elements = soup.find_all('div', class_='text-on-sale span.money')
 
     prices = [price_element.get_text().strip() for price_element in item_price_elements if price_element.get_text().strip()]
 

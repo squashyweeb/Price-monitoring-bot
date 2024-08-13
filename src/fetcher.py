@@ -13,13 +13,26 @@ def fetch_page(url):
 def parse_items(page_content):
     soup = BeautifulSoup(page_content, 'html.parser')
     item_elements = soup.find_all('a', href=lambda x: x and '/products/' in x)
-    item_price_elements = soup.find_all('span', class_='money')
+    prices = []
 
-    prices = [price_element.get_text().strip() for price_element in item_price_elements if price_element.get_text().strip()]
+    for item in item_elements:
+        price_tag = item.find_next('span', class_='money')
+        sale_tag = price_tag.find_previous('span', class_='sr-only', text="Sale price") if price_tag else None
+        
+        if sale_tag:
+            prices.append(price_tag.get_text().strip())
+        else:
+            prices.append(price_tag.get_text().strip() if price_tag else 'N/A')
 
     if len(prices) < len(item_elements):
         print("Warning: Fewer prices than items found.")
+    elif len(prices) > len(item_elements):
+        print("Warning: More prices than items found.")
     
-    prices = prices[-len(item_elements):]
+    items_with_prices = {}
+    for item, price in zip(item_elements, prices):
+        item_name = ' '.join(item.stripped_strings)
+        items_with_prices[item_name] = price
+    
+    return items_with_prices
 
-    return dict((item.get_text().strip(), price) for item, price in zip(item_elements, prices))
